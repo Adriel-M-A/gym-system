@@ -3,9 +3,7 @@ import DashboardLayout from '@/components/layout/DashboardLayout';
 import { HomePage } from '../modules/home/pages/HomePage';
 import { AboutPage } from '../modules/about/pages/AboutPage';
 import { MembersPage } from '../modules/members/pages/MembersPage';
-
-// Placeholder temporal hasta que tengamos el componente de membresías
-const MembershipsPage = () => <div className="p-4">Módulo de Membresías en construcción</div>;
+import { MembershipsPage } from '../modules/memberships/pages/MembershipsPage';
 
 export function AppRouter() {
     return (
