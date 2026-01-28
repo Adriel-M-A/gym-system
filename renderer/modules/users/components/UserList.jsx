@@ -17,8 +17,8 @@ export function UserList() {
 
     const loadUsers = async () => {
         try {
-            if (window.electronAPI?.db) {
-                const data = await window.electronAPI.db.getUsers();
+            if (window.api?.db) {
+                const data = await window.api.db.getUsers();
                 setUsers(data);
             }
         } catch (error) {
@@ -32,11 +32,11 @@ export function UserList() {
 
         setLoading(true);
         try {
-            if (window.electronAPI?.db) {
-                await window.electronAPI.db.createUser({ name, email });
+            if (window.api?.db) {
+                await window.api.db.createUser({ name, email });
                 setName('');
                 setEmail('');
-                loadUsers();
+                loadMembers();
             }
         } catch (error) {
             console.error('Error creating user:', error);

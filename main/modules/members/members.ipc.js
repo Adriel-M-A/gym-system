@@ -10,8 +10,8 @@ function registerIpc(ipcMain) {
         return membersService.updateMember(id, data);
     });
 
-    ipcMain.handle('members:get-all', async (_, { onlyActive } = {}) => {
-        return membersService.getAllMembers(onlyActive);
+    ipcMain.handle('members:get-all', async (_, params = {}) => {
+        return membersService.getAllMembers(params);
     });
 
     ipcMain.handle('members:get-by-id', async (_, id) => {

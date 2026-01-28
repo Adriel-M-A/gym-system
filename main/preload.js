@@ -1,7 +1,7 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
 // Comentario: Exponemos una API segura al proceso de renderizado (React).
-contextBridge.exposeInMainWorld('electronAPI', {
+contextBridge.exposeInMainWorld('api', {
     platform: process.platform,
     // Comentario: API segura para base de datos
     db: {
@@ -12,7 +12,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     members: {
         create: (data) => ipcRenderer.invoke('members:create', data),
         update: (id, data) => ipcRenderer.invoke('members:update', { id, data }),
-        getAll: (active) => ipcRenderer.invoke('members:get-all', { onlyActive: active }),
+        getAll: (params) => ipcRenderer.invoke('members:get-all', params),
         getById: (id) => ipcRenderer.invoke('members:get-by-id', id),
         toggleStatus: (id) => ipcRenderer.invoke('members:toggle-status', id),
         assignMembership: (memberId, membershipId) => ipcRenderer.invoke('members:assign-membership', { memberId, membershipId }),

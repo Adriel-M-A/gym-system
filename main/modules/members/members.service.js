@@ -1,5 +1,6 @@
 const membersRepo = require('./members.repository');
-const membershipsRepo = require('../memberships/memberships.repository'); // Dependencia cruzada permitida en Service
+const membershipsRepo = require('../memberships/memberships.repository');
+const dateUtils = require('../../utils/date.utils');
 
 class MembersService {
 
@@ -19,6 +20,7 @@ class MembersService {
             throw new Error(`El DNI ${data.dni} ya pertenece a otro socio`);
         }
         return membersRepo.updateMember(id, data);
+
     }
 
     toggleActiveStatus(id) {
@@ -27,13 +29,17 @@ class MembersService {
         return membersRepo.setMemberStatus(id, !member.is_active);
     }
 
-    getAllMembers(onlyActive) {
-        const members = membersRepo.getMembers(onlyActive);
-        // Podríamos enriquecer la data aquí con la membresía actual
-        return members.map(m => {
-            const activeMembership = membersRepo.getActiveMembership(m.id);
-            return { ...m, active_membership: activeMembership || null };
-        });
+    getAllMembers(params = {}) {
+        // params: { search, onlyActive }
+        const members = membersRepo.getMembers(params);
+        return members.map(m => ({
+            ...m,
+            active_membership: m.membership_name ? {
+                name: m.membership_name,
+                status: m.membership_status,
+                end_date: m.membership_end_date
+            } : null
+        }));
     }
 
     getMemberDetail(id) {
@@ -48,14 +54,13 @@ class MembersService {
         if (!membership) throw new Error('Membresía no encontrada');
 
         const startDate = new Date();
-        const endDate = new Date();
-        endDate.setDate(startDate.getDate() + membership.duration_days);
+        const endDate = dateUtils.addDays(startDate, membership.duration_days);
 
         const assignmentData = {
             memberId,
             membershipId,
-            startDate: startDate.toISOString().split('T')[0], // YYYY-MM-DD
-            endDate: endDate.toISOString().split('T')[0],
+            startDate: dateUtils.toLocalDate(startDate),
+            endDate: dateUtils.toLocalDate(endDate),
             price: membership.price
         };
 
