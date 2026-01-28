@@ -3,11 +3,14 @@ import { PageLayout } from '@/components/layout/PageLayout';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, MoreHorizontal } from "lucide-react";
+import { Plus, MoreHorizontal, Pencil } from "lucide-react";
+import { MembershipFormSheet } from '../components/MembershipFormSheet';
 
 export const MembershipsPage = () => {
     const [memberships, setMemberships] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [isSheetOpen, setIsSheetOpen] = useState(false);
+    const [selectedMembership, setSelectedMembership] = useState(null);
 
     useEffect(() => {
         loadMemberships();
@@ -27,12 +30,26 @@ export const MembershipsPage = () => {
         }
     };
 
+    const handleCreate = () => {
+        setSelectedMembership(null);
+        setIsSheetOpen(true);
+    };
+
+    const handleEdit = (membership) => {
+        setSelectedMembership(membership);
+        setIsSheetOpen(true);
+    };
+
+    const handleSuccess = () => {
+        loadMemberships();
+    };
+
     return (
         <PageLayout
             title="Membresías"
             subtitle="Gestión de planes y suscripciones."
             action={
-                <Button>
+                <Button onClick={handleCreate}>
                     <Plus className="mr-2 h-4 w-4" /> Nueva Membresía
                 </Button>
             }
@@ -89,6 +106,9 @@ export const MembershipsPage = () => {
                                         </Badge>
                                     </TableCell>
                                     <TableCell className="text-right">
+                                        <Button variant="ghost" size="icon" onClick={() => handleEdit(membership)}>
+                                            <Pencil className="h-4 w-4" />
+                                        </Button>
                                         <Button variant="ghost" size="icon">
                                             <MoreHorizontal className="h-4 w-4" />
                                         </Button>
@@ -99,6 +119,13 @@ export const MembershipsPage = () => {
                     </TableBody>
                 </Table>
             </div>
+
+            <MembershipFormSheet
+                open={isSheetOpen}
+                onOpenChange={setIsSheetOpen}
+                membershipToEdit={selectedMembership}
+                onSuccess={handleSuccess}
+            />
         </PageLayout>
     );
 };

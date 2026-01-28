@@ -8,10 +8,15 @@ import { Search, Plus, MoreHorizontal } from "lucide-react";
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 
+import { SocioFormSheet } from '../components/SocioFormSheet';
+import { Pencil } from "lucide-react";
+
 export const MembersPage = () => {
     const [members, setMembers] = useState([]);
     const [search, setSearch] = useState('');
     const [loading, setLoading] = useState(true);
+    const [isSheetOpen, setIsSheetOpen] = useState(false);
+    const [selectedMember, setSelectedMember] = useState(null);
 
     useEffect(() => {
         loadMembers();
@@ -29,12 +34,26 @@ export const MembersPage = () => {
         }
     };
 
+    const handleCreate = () => {
+        setSelectedMember(null);
+        setIsSheetOpen(true);
+    };
+
+    const handleEdit = (member) => {
+        setSelectedMember(member);
+        setIsSheetOpen(true);
+    };
+
+    const handleSuccess = () => {
+        loadMembers();
+    };
+
     return (
         <PageLayout
             title="Socios"
             subtitle="Gestión de socios, membresías y estados."
             action={
-                <Button>
+                <Button onClick={handleCreate}>
                     <Plus className="mr-2 h-4 w-4" /> Nuevo Socio
                 </Button>
             }
@@ -116,6 +135,9 @@ export const MembersPage = () => {
                                             </Badge>
                                         </TableCell>
                                         <TableCell className="text-right">
+                                            <Button variant="ghost" size="icon" onClick={() => handleEdit(member)}>
+                                                <Pencil className="h-4 w-4" />
+                                            </Button>
                                             <Button variant="ghost" size="icon">
                                                 <MoreHorizontal className="h-4 w-4" />
                                             </Button>
@@ -127,6 +149,13 @@ export const MembersPage = () => {
                     </Table>
                 </div>
             </div>
+
+            <SocioFormSheet
+                open={isSheetOpen}
+                onOpenChange={setIsSheetOpen}
+                memberToEdit={selectedMember}
+                onSuccess={handleSuccess}
+            />
         </PageLayout>
     );
 };
