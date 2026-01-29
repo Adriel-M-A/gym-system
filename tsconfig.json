@@ -21,6 +21,9 @@
         "jsx": "react-jsx",
         "baseUrl": ".",
         "paths": {
+            "@/shared/*": [
+                "./shared/*"
+            ],
             "@/*": [
                 "./renderer/*"
             ]
@@ -33,6 +36,7 @@
     },
     "include": [
         "renderer",
+        "renderer/types",
         "main",
         "vite.config.ts"
     ],

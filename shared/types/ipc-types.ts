@@ -1,13 +1,13 @@
 import { Member, MemberWithActiveMembership, Membership } from './db-models';
 
-export interface IpcApi {
+export interface IPCAPI {
     db: {
-        getUsers: () => Promise<any[]>; // Refinar cuando tengamos User definido
+        getUsers: () => Promise<any[]>;
         createUser: (user: any) => Promise<any>;
     };
     members: {
         create: (data: Omit<Member, 'id' | 'created_at' | 'updated_at'>) => Promise<number>;
-        update: (id: number, data: Partial<Member>) => Promise<void>;
+        update: (id: number, data: Partial<Omit<Member, 'id' | 'created_at' | 'updated_at'>>) => Promise<void>;
         getAll: (params?: { search?: string }) => Promise<MemberWithActiveMembership[]>;
         getById: (id: number) => Promise<MemberWithActiveMembership | null>;
         toggleStatus: (id: number) => Promise<boolean>;
@@ -15,17 +15,10 @@ export interface IpcApi {
         getExpired: () => Promise<Member[]>;
     };
     memberships: {
-        create: (data: Omit<Membership, 'id' | 'created_at'>) => Promise<number>;
-        update: (id: number, data: Partial<Membership>) => Promise<void>;
+        create: (data: Omit<Membership, 'id' | 'created_at' | 'updated_at'>) => Promise<number>;
+        update: (id: number, data: Partial<Omit<Membership, 'id' | 'created_at' | 'updated_at'>>) => Promise<void>;
         getAll: (active?: boolean) => Promise<Membership[]>;
         delete: (id: number) => Promise<void>;
     };
     platform: string;
-}
-
-// Para extender el objeto window globalmente
-declare global {
-    interface Window {
-        api: IpcApi;
-    }
 }

@@ -21,6 +21,7 @@ export interface Membership {
     description: string | null;
     is_active: number | boolean;
     created_at: string;
+    updated_at: string;
 }
 
 export interface MemberMembership {

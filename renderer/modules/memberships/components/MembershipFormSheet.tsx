@@ -1,10 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { SheetLayout } from "@/components/layout/SheetLayout";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/utils/utils";
 import { Membership } from '@/shared/types/db-models';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { MembershipSchema } from '@/shared/schemas/membership.schema';
 
 interface MembershipFormSheetProps {
     open: boolean;
@@ -20,47 +24,62 @@ export function MembershipFormSheet({
     onSuccess
 }: MembershipFormSheetProps) {
     const isEditing = !!membershipToEdit;
-    const [loading, setLoading] = useState(false);
-    const [formData, setFormData] = useState({
-        name: '',
-        price: '',
-        duration_days: '',
-        description: ''
+
+    // Define schema specifically for the form (excluding system fields)
+    // We use .required() to ensure strictness if needed, but the base schema is good.
+    const formSchema = MembershipSchema.omit({
+        id: true,
+        created_at: true,
+        updated_at: true
+    });
+
+    type FormValues = z.input<typeof formSchema>;
+
+    const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<FormValues>({
+        resolver: zodResolver(formSchema),
+        defaultValues: {
+            name: '',
+            price: 0,
+            duration_days: 30,
+            description: null,
+            is_active: true
+        }
     });
 
     useEffect(() => {
         if (open) {
             if (membershipToEdit) {
-                setFormData({
-                    name: membershipToEdit.name || '',
-                    price: membershipToEdit.price ? membershipToEdit.price.toString() : '',
-                    duration_days: membershipToEdit.duration_days ? membershipToEdit.duration_days.toString() : '',
-                    description: membershipToEdit.description || ''
+                reset({
+                    name: membershipToEdit.name,
+                    price: membershipToEdit.price,
+                    duration_days: membershipToEdit.duration_days,
+                    description: membershipToEdit.description || null,
+                    is_active: Boolean(membershipToEdit.is_active)
                 });
             } else {
-                setFormData({
+                reset({
                     name: '',
-                    price: '',
-                    duration_days: '',
-                    description: ''
+                    price: 0,
+                    duration_days: 30,
+                    description: null,
+                    is_active: true
                 });
             }
         }
-    }, [open, membershipToEdit]);
+    }, [open, membershipToEdit, reset]);
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
-    };
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setLoading(true);
+    const onSubmit = async (data: FormValues) => {
         try {
+            // Explicitly map data to match the IPC contract
+            // IPC expects Omit<Membership, 'id' | 'created_at' | 'updated_at'>
+            // which is: { name, price, duration_days, description, is_active }
+            // data.is_active is optional in z.input, so default to true.
             const payload = {
-                ...formData,
-                price: parseFloat(formData.price),
-                duration_days: parseInt(formData.duration_days)
+                name: data.name,
+                price: data.price,
+                duration_days: data.duration_days,
+                description: data.description || null,
+                is_active: data.is_active ?? true
             };
 
             if (isEditing && membershipToEdit) {
@@ -73,8 +92,6 @@ export function MembershipFormSheet({
         } catch (error: any) {
             console.error("Error saving membership:", error);
             alert("Error al guardar: " + error.message);
-        } finally {
-            setLoading(false);
         }
     };
 
@@ -89,24 +106,22 @@ export function MembershipFormSheet({
                             <Button variant="outline" onClick={() => onOpenChange(false)} type="button">
                                 Cancelar
                             </Button>
-                            <Button onClick={handleSubmit} disabled={loading}>
-                                {loading ? "Guardando..." : "Guardar"}
+                            <Button onClick={handleSubmit(onSubmit)} disabled={isSubmitting}>
+                                {isSubmitting ? "Guardando..." : "Guardar"}
                             </Button>
                         </div>
                     }
                 >
-                    <form id="membership-form" onSubmit={handleSubmit} className="space-y-4">
+                    <form id="membership-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                         <div className="space-y-2">
                             <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                                 Nombre del Plan <span className="text-red-500">*</span>
                             </label>
                             <Input
-                                name="name"
-                                value={formData.name}
-                                onChange={handleChange}
-                                required
+                                {...register('name')}
                                 placeholder="Ej: Mensual Full, Pase Diario"
                             />
+                            {errors.name && <p className="text-red-500 text-xs">{errors.name.message}</p>}
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">
@@ -116,14 +131,12 @@ export function MembershipFormSheet({
                                 </label>
                                 <Input
                                     type="number"
-                                    name="price"
-                                    value={formData.price}
-                                    onChange={handleChange}
-                                    required
-                                    placeholder="0.00"
+                                    {...register('price', { valueAsNumber: true })}
                                     step="0.01"
                                     min="0"
+                                    placeholder="0.00"
                                 />
+                                {errors.price && <p className="text-red-500 text-xs">{errors.price.message}</p>}
                             </div>
                             <div className="space-y-2">
                                 <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
@@ -131,13 +144,11 @@ export function MembershipFormSheet({
                                 </label>
                                 <Input
                                     type="number"
-                                    name="duration_days"
-                                    value={formData.duration_days}
-                                    onChange={handleChange}
-                                    required
-                                    placeholder="30"
+                                    {...register('duration_days', { valueAsNumber: true })}
                                     min="1"
+                                    placeholder="30"
                                 />
+                                {errors.duration_days && <p className="text-red-500 text-xs">{errors.duration_days.message}</p>}
                             </div>
                         </div>
 
@@ -149,11 +160,10 @@ export function MembershipFormSheet({
                                 className={cn(
                                     "flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                                 )}
-                                name="description"
-                                value={formData.description}
-                                onChange={handleChange}
+                                {...register('description')}
                                 placeholder="Detalles sobre qué incluye este plan..."
                             />
+                            {errors.description && <p className="text-red-500 text-xs">{errors.description.message}</p>}
                         </div>
                     </form>
                 </SheetLayout>

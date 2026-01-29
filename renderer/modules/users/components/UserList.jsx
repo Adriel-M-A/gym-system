@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
 
 // Comentario: Componente para listar y crear usuarios usando SQLite (vía IPC).
 export function UserList() {
@@ -36,7 +38,7 @@ export function UserList() {
                 await window.api.db.createUser({ name, email });
                 setName('');
                 setEmail('');
-                loadMembers();
+                loadUsers();
             }
         } catch (error) {
             console.error('Error creating user:', error);
@@ -78,7 +80,7 @@ export function UserList() {
                                     <p className="text-muted-foreground">{user.email}</p>
                                 </div>
                                 <span className="text-xs text-muted-foreground">
-                                    {new Date(user.created_at).toLocaleDateString()}
+                                    {format(new Date(user.created_at), 'dd/MM/yyyy HH:mm', { locale: es })}
                                 </span>
                             </div>
                         ))
